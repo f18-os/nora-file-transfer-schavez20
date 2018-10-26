@@ -40,14 +40,15 @@ class ClientThread(Thread):
        for res in socket.getaddrinfo(serverHost, serverPort, socket.AF_UNSPEC, socket.SOCK_STREAM):
            af, socktype, proto, canonname, sa = res
            try:
-               print("creating sock: af=%d, type=%d, proto=%d" % (af, socktype, proto))
+               print("          creating sock: af=%d, type=%d, proto=%d" % (af, socktype, proto))
                s = socket.socket(af, socktype, proto)
            except socket.error as msg:
-               print(" error: %s" % msg)
+               print("      error: %s" % msg)
                s = None
                continue
            try:
-               print(" attempting to connect to %s" % repr(sa))
+               print("              attempting to connect to %s" % repr(sa))
+              # print("im the sa witout repr " + str( serverHost))
                s.connect(sa)
            except socket.error as msg:
                print(" error: %s" % msg)
@@ -59,17 +60,27 @@ class ClientThread(Thread):
        if s is None:
            print('could not open socket')
            sys.exit(1)
+           
+       while(True): 
+            fs = FramedStreamSock(s, debug=debug)
+            userInput = input("Enter the file name you wish to send or type ""exit"" to exit the program \n")
+            
+            if (userInput != "exit"):
+                try:
+                    with open(userInput,"r") as file:
+                        fileline  = file.read().split("\n")
+						#print(fileline)
+						
+                        i=0
+                    for stringLine in fileline:
+                        if(stringLine != '' or stringLine != ' '):
+                            fs.sendmsg(fileline[i].encode())
+                            print("received:", fs.receivemsg())
+                            i+=1
+                    file.close()
+                except IOError:
+                    print("File does not exist in this directory")
+            else:
+                break
 
-       fs = FramedStreamSock(s, debug=debug)
-
-
-       print("sending hello world")
-       fs.sendmsg(b"hello world")
-       print("received:", fs.receivemsg())
-
-       fs.sendmsg(b"hello world")
-       print("received:", fs.receivemsg())
-
-for i in range(100):
-    ClientThread(serverHost, serverPort, debug)
-
+ClientThread(serverHost, serverPort, debug)

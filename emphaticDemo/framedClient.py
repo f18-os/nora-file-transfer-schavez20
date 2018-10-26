@@ -2,6 +2,7 @@
 
 # Echo client program
 import socket, sys, re
+import os
 import params
 from framedSock import FramedStreamSock
 
@@ -51,14 +52,23 @@ for res in socket.getaddrinfo(serverHost, serverPort, socket.AF_UNSPEC, socket.S
 if s is None:
     print('could not open socket')
     sys.exit(1)
+while (True):
+	fs = FramedStreamSock(s, debug=debug)
 
-fs = FramedStreamSock(s, debug=debug)
+	#lets work on the user iput 
+	stringIn = input("enter the name of the file enter exit to finish\n")
+	#print(stringIn)
+	if(stringIn != "exit"):
+		infile = open(stringIn,"r")
+		for line in infile:
+			print(line.encode())
+			fs.sendmsg(line.encode())
+		print("received:", fs.receivemsg())
+	else:
+	 	break
+#fs.sendmsg(b"hello world")
+#print("received:", fs.receivemsg())
 
-
-print("sending hello world")
-fs.sendmsg(b"hello world")
-print("received:", fs.receivemsg())
-
-fs.sendmsg(b"hello world")
-print("received:", fs.receivemsg())
+#fs.sendmsg(b"hello world")
+#print("received:", fs.receivemsg())
 
